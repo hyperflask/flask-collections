@@ -8,10 +8,25 @@ class Collections:
         if app:
             self.init_app(app, **kwargs)
 
-    def init_app(self, app, collections_folder="collections"):
+    def init_app(
+        self,
+        app,
+        collections_folder="collections",
+        markdown_options=None,
+        base_collection_config=None,
+    ):
         self.app = app
+        self.base_collection_config = (
+            app.config.get("COLLECTIONS_BASE_CONFIG", base_collection_config) or {}
+        )
+        markdown_options = app.config.get("COLLECTIONS_MARKDOWN_OPTIONS", markdown_options) or {}
+        if markdown_options:
+            self.base_collection_config["markdown_options"] = markdown_options
         if os.path.exists(os.path.join(app.root_path, collections_folder)):
-            self.register_from_dir(os.path.join(app.root_path, collections_folder), app.config.setdefault("COLLECTIONS", {}))
+            self.register_from_dir(
+                os.path.join(app.root_path, collections_folder),
+                app.config.setdefault("COLLECTIONS", {}),
+            )
         app.jinja_env.globals["collections"] = self.collections
 
     def __getattr__(self, name):
@@ -22,7 +37,7 @@ class Collections:
             path = os.path.join(self.app.root_path, path)
         if config is None:
             config = {}
-        
+
         for f in os.listdir(path):
             if f.startswith(".") or f.startswith("_"):
                 continue
@@ -41,10 +56,12 @@ class Collections:
             collection_cls = discover_collection_cls(collection_config)
             if not collection_cls:
                 raise Exception(f"Failed to initalize collection {name}")
-            self.collections[name] = collection_cls(self.app, name, **collection_config)
+            self.collections[name] = collection_cls(
+                self.app, name, **dict(self.base_collection_config, **collection_config)
+            )
             if register and self.collections[name].url:
                 self.collections[name].register(self.app)
-    
+
     def register_freezer_generator(self, freezer, collections=None):
         @freezer.register_generator
         def collections_generator():

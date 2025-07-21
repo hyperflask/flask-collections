@@ -11,14 +11,20 @@ else:
 
 
 def list_available_collection_classes():
-    for finder, name, ispkg in pkgutil.iter_modules(sys.modules[__name__].__path__, sys.modules[__name__].__name__ + "."):
+    for finder, name, ispkg in pkgutil.iter_modules(
+        sys.modules[__name__].__path__, sys.modules[__name__].__name__ + "."
+    ):
         try:
             module = importlib.import_module(name)
-        except:
+        except Exception:
             continue
         for item in dir(module):
             item = getattr(module, item)
-            if inspect.isclass(item) and issubclass(item, BaseCollection):
+            if (
+                inspect.isclass(item)
+                and issubclass(item, BaseCollection)
+                and not inspect.isabstract(item)
+            ):
                 yield item
     for entry in entry_points(group="flask_collections"):
         yield entry.load()

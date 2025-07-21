@@ -1,21 +1,38 @@
-from ..collection import BaseDataCollection, CollectionEntry, CollectionEntryNotFoundError
+from ..collection import BaseCollection, CollectionEntry, CollectionEntryNotFoundError
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 
-class APICollection(BaseDataCollection):
+class APICollection(BaseCollection):
+    entry_cls = CollectionEntry
+
     @classmethod
     def matches_config(cls, config):
         return config.get("api_url")
-    
-    def __init__(self, app, name, api_url, headers=None, username=None, password=None, digest_auth=False, auth_token=None, auth=None, request_data_key=None, **kwargs):
+
+    def __init__(
+        self,
+        app,
+        name,
+        api_url,
+        headers=None,
+        username=None,
+        password=None,
+        digest_auth=False,
+        auth_token=None,
+        auth=None,
+        request_data_key=None,
+        **kwargs,
+    ):
         super().__init__(app, name, **kwargs)
         self.api_url = api_url
         self.request_data_key = request_data_key
         self.headers = headers or {}
         self.auth = auth
         if username or password:
-            self.auth = (HTTPDigestAuth if digest_auth else HTTPBasicAuth)(username or "", password or "")
+            self.auth = (HTTPDigestAuth if digest_auth else HTTPBasicAuth)(
+                username or "", password or ""
+            )
         if auth_token:
             self.headers["Authorization"] = f"bearer {auth_token}"
 
@@ -25,12 +42,12 @@ class APICollection(BaseDataCollection):
         resp.raise_for_status()
         return resp
 
-    def iter_entries(self, slice=None):
+    def load(self):
         resp = self._request()
         next_page_params = None
         while True:
             data = resp.json()
-            for entry in (data[self.request_data_key] if self.request_data_key else data):
+            for entry in data[self.request_data_key] if self.request_data_key else data:
                 yield self.entry_cls.from_data(self, entry)
             next_page_params = self.get_next_page_params(resp, next_page_params)
             if not next_page_params:
@@ -49,17 +66,12 @@ class APICollection(BaseDataCollection):
             raise
         data = data[self.request_data_key] if self.request_data_key else data
         return self.entry_cls.from_data(self, data)
-    
+
 
 class StrapiCollectionEntry(CollectionEntry):
     @classmethod
     def from_data(cls, collection, data):
-        props = dict(data["attributes"])
-        props["id"] = data["id"]
-        slug = props.pop(collection.slug_attr)
-        if collection.content_attr and collection.content_attr != "content":
-            props["content"] = props.pop(collection.content_attr, None)
-        return cls(collection, slug, **props)
+        return CollectionEntry.from_data(collection, data["attributes"])
 
 
 class StrapiCollection(APICollection):

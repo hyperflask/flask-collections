@@ -96,7 +96,7 @@ class BaseCollection:
         "content_prop": "content",
         "is_template_prop": "is_template",
         "is_markdown_prop": "is_markdown",
-        "filename_template": "((?P<date>\d{4}-\d{2}-\d{2})-)?(?P<slug>.*)",
+        "filename_template": r"((?P<date>\d{4}-\d{2}-\d{2})-)?(?P<slug>.*)",
     }
 
     @classmethod

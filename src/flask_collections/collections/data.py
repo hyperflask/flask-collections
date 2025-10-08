@@ -14,8 +14,8 @@ class DataCollection(BaseCollection):
     def matches_config(cls, config):
         return isinstance(config.get("entries"), list)
 
-    def __init__(self, app, name, entries, **kwargs):
-        super().__init__(app, name, **kwargs)
+    def __init__(self, name, entries, **kwargs):
+        super().__init__(name, **kwargs)
         self._entries = entries
 
     def load(self):

@@ -57,7 +57,7 @@ class Collections:
             if not collection_cls:
                 raise Exception(f"Failed to initalize collection {name}")
             self.collections[name] = collection_cls(
-                self.app, name, **dict(self.base_collection_config, **collection_config)
+                name, **dict(self.base_collection_config, **collection_config)
             )
             if register and self.collections[name].url:
                 self.collections[name].register(self.app)

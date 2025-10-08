@@ -10,8 +10,8 @@ class DirectoryCollection(BaseCollection):
     def matches_config(cls, config):
         return config.get("path") and os.path.isdir(config["path"])
 
-    def __init__(self, app, name, path, **kwargs):
-        super().__init__(app, name, **kwargs)
+    def __init__(self, name, path, **kwargs):
+        super().__init__(name, **kwargs)
         self.path = path
 
     def load(self):

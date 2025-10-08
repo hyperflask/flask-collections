@@ -2,7 +2,7 @@ import os
 import yaml
 import markdown
 import re
-from flask import url_for, abort
+from flask import url_for, abort, render_template, render_template_string
 from markupsafe import Markup
 
 
@@ -64,7 +64,7 @@ class CollectionEntry:
 
         if self.props.get(self.collection.config.get("is_template_prop", "is_template")):
             ctx = dict(self.props, entry=self)
-            content = self.collection.app.jinja_env.from_string(self.content).render(**ctx)
+            content = render_template_string(self.content, **ctx)
 
         if self.props.get(self.collection.config.get("is_markdown_prop", "is_markdown")):
             content = Markup(
@@ -82,8 +82,7 @@ class CollectionEntry:
         if not layout:
             return content
 
-        tpl = self.collection.app.jinja_env.get_template(layout)
-        return tpl.render(entry=self, content=content)
+        return render_template(layout, entry=self, content=content)
 
 
 class CollectionEntryNotFoundError(Exception):
@@ -103,8 +102,7 @@ class BaseCollection:
     def matches_config(cls, config):
         return False
 
-    def __init__(self, app, name, url=None, url_rule=None, endpoint=None, layout=None, **config):
-        self.app = app
+    def __init__(self, name, url=None, url_rule=None, endpoint=None, layout=None, **config):
         self.name = name
         if url is False:
             self.url = None

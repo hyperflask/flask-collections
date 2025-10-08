@@ -12,7 +12,6 @@ class APICollection(BaseCollection):
 
     def __init__(
         self,
-        app,
         name,
         api_url,
         headers=None,
@@ -24,7 +23,7 @@ class APICollection(BaseCollection):
         request_data_key=None,
         **kwargs,
     ):
-        super().__init__(app, name, **kwargs)
+        super().__init__(name, **kwargs)
         self.api_url = api_url
         self.request_data_key = request_data_key
         self.headers = headers or {}
@@ -81,9 +80,9 @@ class StrapiCollection(APICollection):
     def matches_config(cls, config):
         return config.get("strapi_url")
 
-    def __init__(self, app, name, strapi_url, **kwargs):
+    def __init__(self, name, strapi_url, **kwargs):
         kwargs["request_data_key"] = "data"
-        super().__init__(app, name, strapi_url, **kwargs)
+        super().__init__(name, strapi_url, **kwargs)
 
     def get_next_page_params(self, resp, current_page_params):
         resp = resp.json()
